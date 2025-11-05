@@ -3,7 +3,17 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "firebase/auth";
-import { getUser } from "../lib/firestore";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
+    <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
+    <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+    <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
+    <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.99,36.62,44,30.638,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
+  </svg>
+);
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,37 +31,28 @@ export default function LoginPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        try {
-          const existingUser = await getUser(user.uid);
-          // 토큰 생성 및 쿠키 저장
-          const token = await user.getIdToken();
-          document.cookie = `token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=strict`;
-          
-          if (existingUser === null) {
-            router.replace("/habit-input");
-          } else {
-            // URL 파라미터에서 원래 가려던 페이지 확인
-            const params = new URLSearchParams(window.location.search);
-            const from = params.get('from') || '/';
-            router.replace(from);
-          }
-        } catch (error) {
-          console.error("사용자 데이터 로딩 실패:", error);
-        }
+        const token = await user.getIdToken();
+        document.cookie = `token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=strict`;
+        router.replace('/');
       }
     });
     return () => unsubscribe();
   }, [auth, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
-      <h1 className="text-4xl font-bold mb-8">로그인</h1>
-      <button
-        onClick={handleGoogleLogin}
-        className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-      >
-        Google 로그인
-      </button>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#9DC183] via-[#8BB76E] to-[#7FA968]">
+      <Card className="w-[380px]">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold">매실차 프로젝트</CardTitle>
+          <CardDescription>매일의 실천이 만드는 차이, 지금 시작해보세요.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" className="w-full" onClick={handleGoogleLogin}>
+            <GoogleIcon className="mr-2" />
+            Google 계정으로 로그인
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,38 +1,123 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "./lib/auth-context"
 import { useRouter } from "next/navigation"
 import { logout } from "./lib/auth"
-import { getUserProgress } from "./lib/user-progress"
+import { getUser, approvePostAndUpdateProgress } from "./lib/firestore"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { LogOut, Info, Target, MessageCircle, Menu, X, Award, TrendingUp, Calendar } from "lucide-react"
+import { LogOut, Info, Target, MessageCircle, Menu, X, Award, TrendingUp, Calendar, CheckCircle } from "lucide-react"
+
+// Mock data for posts, with authorId added
+const initialPosts = [
+  {
+    id: "post1",
+    authorId: "student1",
+    author: "이지은",
+    title: "아침 운동 루틴 성공!",
+    content: "오늘도 아침 6시에 일어나서 운동했어요! 점점 습관이 되어가는 것 같아요.",
+    timestamp: "2시간 전",
+    image: "/morning-exercise-workout.jpg",
+    commentCount: 12,
+    approved: true,
+  },
+  {
+    id: "post2",
+    authorId: "student2",
+    author: "박서준",
+    title: "독서 습관 만들기",
+    content: "매일 책 읽기 목표 달성! 오늘은 자기계발서 30페이지 읽었습니다.",
+    timestamp: "5시간 전",
+    commentCount: 8,
+    approved: true,
+  },
+  {
+    id: "post3",
+    authorId: "student3",
+    author: "최유나",
+    title: "하루 물 2L 마시기 도전",
+    content: "물 2L 마시기 성공! 건강해지는 느낌이에요 💪",
+    timestamp: "1일 전",
+    image: "/water-bottle-healthy-lifestyle.jpg",
+    commentCount: 15,
+    approved: false,
+  },
+  {
+    id: "post4",
+    authorId: "student4",
+    author: "정민호",
+    title: "영어 단어 암기 챌린지",
+    content: "영어 단어 50개 외우기 완료. 꾸준히 하니까 실력이 늘어요!",
+    timestamp: "1일 전",
+    commentCount: 5,
+    approved: true,
+  },
+  {
+    id: "post5",
+    authorId: "student5",
+    author: "김하늘",
+    title: "매일 명상하기",
+    content: "명상 10분 완료! 마음이 차분해지는 시간이었어요.",
+    timestamp: "2일 전",
+    image: "/peaceful-nature-meditation.png",
+    commentCount: 20,
+    approved: false,
+  },
+  {
+    id: "post6",
+    authorId: "student6",
+    author: "이준호",
+    title: "기타 연습 30분",
+    content: "기타 연습 30분 달성. 오늘은 새로운 코드를 배웠어요!",
+    timestamp: "2일 전",
+    commentCount: 3,
+    approved: true,
+  },
+]
 
 export default function GoalTrackerPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const [progress, setProgress] = useState({
-    streakDays: 0,
-    goalCount: 30,
-    completedCount: 0
-  })
+  const [userData, setUserData] = useState<any>(null)
+  const [posts, setPosts] = useState(initialPosts)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const fetchUserData = useCallback(async () => {
     if (user) {
-      getUserProgress(user.uid)
-        .then(userProgress => {
-          setProgress(userProgress)
-          setLoading(false)
-        })
-        .catch(error => {
-          console.error('Failed to load progress:', error)
-          setLoading(false)
-        })
+      try {
+        setLoading(true)
+        const data = await getUser(user.uid);
+        if (!data) {
+          // User is authenticated but no Firestore profile exists, redirect to habit-input
+          router.push('/habit-input');
+          return;
+        }
+        setUserData(data);
+      } catch (error) {
+        console.error('Failed to load user data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [user])
+  }, [user, router]);
+
+  useEffect(() => {
+    if (authLoading) {
+      // Still checking auth state
+      return;
+    }
+
+    if (!user) {
+      // Not authenticated, redirect to login
+      router.push('/login');
+      return;
+    }
+
+    // Authenticated, now fetch user data from Firestore
+    fetchUserData();
+  }, [user, authLoading, router, fetchUserData])
 
   const handleLogout = async () => {
     try {
@@ -43,76 +128,33 @@ export default function GoalTrackerPage() {
     }
   }
 
-  const posts = [
-    {
-      id: 1,
-      title: "아침 운동 루틴 성공!",
-      author: "이지은",
-      content: "오늘도 아침 6시에 일어나서 운동했어요! 점점 습관이 되어가는 것 같아요.",
-      timestamp: "2시간 전",
-      image: "/morning-exercise-workout.jpg",
-      commentCount: 12,
-      approved: true,
-    },
-    {
-      id: 2,
-      title: "독서 습관 만들기",
-      author: "박서준",
-      content: "매일 책 읽기 목표 달성! 오늘은 자기계발서 30페이지 읽었습니다.",
-      timestamp: "5시간 전",
-      commentCount: 8,
-      approved: true,
-    },
-    {
-      id: 3,
-      title: "하루 물 2L 마시기 도전",
-      author: "최유나",
-      content: "물 2L 마시기 성공! 건강해지는 느낌이에요 💪",
-      timestamp: "1일 전",
-      image: "/water-bottle-healthy-lifestyle.jpg",
-      commentCount: 15,
-      approved: false,
-    },
-    {
-      id: 4,
-      title: "영어 단어 암기 챌린지",
-      author: "정민호",
-      content: "영어 단어 50개 외우기 완료. 꾸준히 하니까 실력이 늘어요!",
-      timestamp: "1일 전",
-      commentCount: 5,
-      approved: true,
-    },
-    {
-      id: 5,
-      title: "매일 명상하기",
-      author: "김하늘",
-      content: "명상 10분 완료! 마음이 차분해지는 시간이었어요.",
-      timestamp: "2일 전",
-      image: "/peaceful-nature-meditation.png",
-      commentCount: 20,
-      approved: false,
-    },
-    {
-      id: 6,
-      title: "기타 연습 30분",
-      author: "이준호",
-      content: "기타 연습 30분 달성. 오늘은 새로운 코드를 배웠어요!",
-      timestamp: "2일 전",
-      commentCount: 3,
-      approved: true,
-    },
-  ]
+  const handleApprovePost = async (postId: string, authorId: string) => {
+    if (userData?.role !== 'teacher') {
+      console.error("Only teachers can approve posts.");
+      return;
+    }
+    try {
+      await approvePostAndUpdateProgress(postId, authorId);
+      setPosts(currentPosts =>
+        currentPosts.map(p => (p.id === postId ? { ...p, approved: true } : p))
+      );
+      // If the approved post belongs to the current user, refetch their data to show updated progress
+      if (authorId === user?.uid) {
+        fetchUserData();
+      }
+      alert("게시물을 승인했습니다.");
+    } catch (error) {
+      console.error("Failed to approve post:", error);
+      alert("게시물 승인에 실패했습니다.");
+    }
+  };
 
-  const completionRate = Math.round((progress.completedCount / progress.goalCount) * 100)
+  const completionRate = Math.round(((userData?.completedCount || 0) / (userData?.goalCount || 30)) * 100)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#9DC183] via-[#8BB76E] to-[#7FA968] relative overflow-hidden">
-      <div className="absolute inset-0 opacity-5 md:opacity-10">
-        <div className="absolute top-10 md:top-20 left-5 md:left-10 w-20 md:w-32 h-20 md:h-32 bg-white rounded-full blur-2xl md:blur-3xl"></div>
-        <div className="absolute bottom-20 md:bottom-40 right-10 md:right-20 w-24 md:w-40 h-24 md:h-40 bg-white rounded-full blur-2xl md:blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/3 w-16 md:w-24 h-16 md:h-24 bg-white rounded-full blur-xl md:blur-2xl"></div>
-      </div>
-
+      {/* ... (rest of the JSX is the same until the posts mapping) ... */}
+      
       <nav className="bg-white/95 backdrop-blur-sm border-b border-white/20 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-3 md:px-4">
           <div className="flex items-center justify-between h-14 md:h-16">
@@ -178,7 +220,7 @@ export default function GoalTrackerPage() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-3 md:px-4 py-6 md:py-12 relative z-10">
-        {loading ? (
+        {loading || !userData ? (
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-white text-lg">데이터를 불러오는 중...</div>
           </div>
@@ -204,7 +246,7 @@ export default function GoalTrackerPage() {
             <div className="absolute inset-0 bg-gradient-to-r from-[#F4D03F]/10 via-transparent to-[#E67E22]/10"></div>
             <span className="text-xl md:text-5xl relative z-10 animate-pulse flex-shrink-0">🔥</span>
             <h2 className="text-xs md:text-3xl font-bold text-[#5A7C3E] relative z-10 leading-tight whitespace-nowrap">
-              {user?.displayName || '사용자'}님은 총 <span className="text-[#E67E22]">{progress.completedCount}개</span>의 목표를 달성했어요!
+              {userData.name || '사용자'}님은 총 <span className="text-[#E67E22]">{userData.completedCount}회</span> 목표를 달성했어요!
             </h2>
             <span className="text-xl md:text-5xl relative z-10 animate-pulse flex-shrink-0">🔥</span>
           </div>
@@ -242,14 +284,14 @@ export default function GoalTrackerPage() {
                     <Target className="w-3 h-3 md:w-5 md:h-5 text-[#E67E22]" />
                     <p className="text-[10px] md:text-sm font-bold text-gray-600">목표</p>
                   </div>
-                  <p className="text-lg md:text-3xl font-black text-[#5A7C3E]">{progress.goalCount}</p>
+                  <p className="text-lg md:text-3xl font-black text-[#5A7C3E]">{userData.goalCount}</p>
                 </div>
                 <div className="bg-gradient-to-br from-[#9DC183]/20 to-[#7FA968]/20 rounded-lg md:rounded-2xl p-2.5 md:p-4 text-center border-2 border-[#9DC183]/30">
                   <div className="flex items-center justify-center gap-1 mb-0.5 md:mb-1">
                     <TrendingUp className="w-3 h-3 md:w-5 md:h-5 text-[#7FA968]" />
                     <p className="text-[10px] md:text-sm font-bold text-gray-600">달성</p>
                   </div>
-                  <p className="text-lg md:text-3xl font-black text-[#5A7C3E]">{progress.completedCount}</p>
+                  <p className="text-lg md:text-3xl font-black text-[#5A7C3E]">{userData.completedCount}</p>
                 </div>
                 <div className="bg-gradient-to-br from-[#7CB342]/20 to-[#689F38]/20 rounded-lg md:rounded-2xl p-2.5 md:p-4 text-center border-2 border-[#7CB342]/30">
                   <div className="flex items-center justify-center gap-1 mb-0.5 md:mb-1">
@@ -278,9 +320,9 @@ export default function GoalTrackerPage() {
                 <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3 w-6 h-6 md:w-8 md:h-8 border-b-2 md:border-b-4 border-r-2 md:border-r-4 border-[#9DC183]/30 rounded-br-lg md:rounded-br-xl"></div>
 
                 <div className="grid grid-cols-5 md:grid-cols-10 gap-2 md:gap-4">
-                  {Array.from({ length: progress.goalCount }).map((_, index) => {
+                  {Array.from({ length: userData.goalCount }).map((_, index) => {
                     const fruitNumber = index + 1
-                    const isCompleted = fruitNumber <= progress.completedCount
+                    const isCompleted = fruitNumber <= userData.completedCount
 
                     return (
                       <div
@@ -372,9 +414,20 @@ export default function GoalTrackerPage() {
                   </div>
                 </div>
 
-                {/* Teacher approval stamp in bottom right corner */}
-                {post.approved && (
-                  <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 z-10">
+                {/* Teacher approval actions */}
+                <div className="absolute bottom-4 right-4 z-10 flex items-center gap-2">
+                  {userData?.role === 'teacher' && !post.approved && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-white/80 backdrop-blur-sm border-green-600 text-green-700 hover:bg-green-50"
+                      onClick={() => handleApprovePost(post.id, post.authorId)}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      승인
+                    </Button>
+                  )}
+                  {post.approved && (
                     <div className="relative w-14 h-14 md:w-20 md:h-20 animate-in zoom-in duration-500">
                       <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#F4D03F] via-[#F39C12] to-[#E67E22] shadow-lg rotate-12 opacity-95"></div>
                       <div className="absolute inset-0.5 md:inset-1 rounded-full border-2 border-dashed border-white/60"></div>
@@ -387,8 +440,8 @@ export default function GoalTrackerPage() {
                       </div>
                       <div className="absolute -top-0.5 -right-0.5 md:-top-1 md:-right-1 w-2.5 h-2.5 md:w-3 md:h-3 bg-[#5A7C3E] rounded-full shadow-md"></div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </Card>
             ))}
           </div>
