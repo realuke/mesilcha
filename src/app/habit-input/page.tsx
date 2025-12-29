@@ -57,7 +57,6 @@ export default function HabitInputPage() {
         email: user.email || '',
         role: 'student',
         habit,
-        goalCount: 30, // Default goal count
       });
       alert('사용자 정보가 저장되었습니다!');
       router.push('/'); // Redirect to main page after saving
