@@ -90,9 +90,31 @@ export async function approvePostAndUpdateProgress(postId: string, studentId: st
 }
 
 // Get all posts from the `posts` collection
+
 export async function getPosts() {
+
   const postsRef = collection(db, "posts");
+
   const q = query(postsRef, orderBy("createdAt", "desc"));
+
   const querySnapshot = await getDocs(q);
+
   return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+}
+
+
+
+// Get all comments for a post
+
+export async function getComments(postId: string) {
+
+  const commentsRef = collection(db, `posts/${postId}/comments`);
+
+  const q = query(commentsRef, orderBy("createdAt", "asc"));
+
+  const querySnapshot = await getDocs(q);
+
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
 }
