@@ -5,7 +5,7 @@ import { useAuth } from "@/app/lib/auth-context"
 import { useRouter } from "next/navigation"
 import { logout } from "@/app/lib/auth"
 import { Button } from "@/components/ui/button"
-import { LogOut, Info, Target, Menu, X } from "lucide-react"
+import { LogOut, Info, Target, Menu, X, Trophy } from "lucide-react"
 import Link from "next/link"
 
 export default function Navbar() {
@@ -41,14 +41,22 @@ export default function Navbar() {
 
           {/* Desktop menu */}
           <div className="hidden md:flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-[#5A7C3E] hover:bg-[#9DC183]/20">
-              <Info className="w-4 h-4 mr-2" />
-              프로젝트 소개
-            </Button>
+            <Link href="/intro" passHref>
+              <Button variant="ghost" size="sm" className="text-[#5A7C3E] hover:bg-[#9DC183]/20">
+                <Info className="w-4 h-4 mr-2" />
+                프로젝트 소개
+              </Button>
+            </Link>
             <Link href="/board" passHref>
               <Button variant="ghost" size="sm" className="text-[#5A7C3E] hover:bg-[#9DC183]/20">
                 <Target className="w-4 h-4 mr-2" />
                 게시판
+              </Button>
+            </Link>
+            <Link href="/statistics" passHref>
+              <Button variant="ghost" size="sm" className="text-[#5A7C3E] hover:bg-[#9DC183]/20">
+                <Trophy className="w-4 h-4 mr-2" />
+                통계
               </Button>
             </Link>
             <Button 
@@ -77,14 +85,22 @@ export default function Navbar() {
         {mobileMenuOpen && (
           <div className="md:hidden py-3 border-t border-gray-100">
             <div className="flex flex-col gap-1">
-              <Button variant="ghost" size="sm" className="justify-start text-[#5A7C3E] hover:bg-[#9DC183]/20">
-                <Info className="w-4 h-4 mr-2" />
-                프로젝트 소개
-              </Button>
+              <Link href="/intro" passHref>
+                <Button variant="ghost" size="sm" className="justify-start text-[#5A7C3E] hover:bg-[#9DC183]/20">
+                  <Info className="w-4 h-4 mr-2" />
+                  프로젝트 소개
+                </Button>
+              </Link>
               <Link href="/board" passHref>
                 <Button variant="ghost" size="sm" className="justify-start text-[#5A7C3E] hover:bg-[#9DC183]/20">
                   <Target className="w-4 h-4 mr-2" />
                   게시판
+                </Button>
+              </Link>
+              <Link href="/statistics" passHref>
+                <Button variant="ghost" size="sm" className="justify-start text-[#5A7C3E] hover:bg-[#9DC183]/20">
+                  <Trophy className="w-4 h-4 mr-2" />
+                  통계
                 </Button>
               </Link>
               <Button 

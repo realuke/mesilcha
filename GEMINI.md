@@ -73,13 +73,13 @@ Stores comments on a specific post.
 
 ## Future Development (To-Do List)
 
-1.  **Refactor `users` Collection:** Further simplify the `users` collection by removing potentially unnecessary fields (`goalCount`, `lastCompletedDate`, `streakDays`).
+1.  **Refactor `users` Collection:** Further simplify the `users` collection by removing potentially unnecessary fields (`goalCount`, `lastCompletedDate`, `streakDays`). - **Completed (User confirmed)**
 2.  **Implement Full Board Features:**
-    *   Create a UI for submitting new posts.
-    *   Implement commenting functionality on posts.
-    *   Create a dedicated page to view all posts.
-3.  **Statistics Page:** Create a leaderboard page to display statistics on goal completion counts for all members.
-4.  **Project Intro Page:** Create a static page to introduce the project, potentially rendering content from a Markdown file.
+    *   Create a UI for submitting new posts. - **Completed**
+    *   Implement commenting functionality on posts. - **Completed**
+    *   Create a dedicated page to view all posts. - **Completed**
+3.  **Statistics Page:** Create a leaderboard page to display statistics on goal completion counts for all members. - **Completed**
+4.  **Project Intro Page:** Create a static page to introduce the project, potentially rendering content from a Markdown file. - **Completed**
 
 ## User Preferences
 

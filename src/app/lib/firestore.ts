@@ -170,13 +170,29 @@ export async function getComments(postId: string): Promise<CommentData[]> {
 
   const querySnapshot = await getDocs(q);
 
-    return querySnapshot.docs.map(doc => ({ ...doc.data() as CommentData, id: doc.id }));
+        return querySnapshot.docs.map(doc => ({ ...doc.data() as CommentData, id: doc.id }));
 
-  }
+      }
 
-  
+    
 
-  // Delete a post and all its comments
+      // Get all users sorted by completedCount for leaderboard
+
+      export async function getUsersSortedByCompletedCount(): Promise<UserData[]> {
+
+        const usersRef = collection(db, "users");
+
+        const q = query(usersRef, orderBy("completedCount", "desc"));
+
+        const querySnapshot = await getDocs(q);
+
+        return querySnapshot.docs.map(doc => ({ ...doc.data() as UserData, uid: doc.id }));
+
+      }
+
+      
+
+      // Delete a post and all its comments
 
   export async function deletePost(postId: string) {
 

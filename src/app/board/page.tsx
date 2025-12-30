@@ -275,7 +275,7 @@ export default function BoardPage() {
             <Button
               size="lg"
               onClick={() => setIsPostModalOpen(true)}
-              className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 rounded-full shadow-2xl bg-[#FFD700] text-[#5A7C3E] hover:bg-[#FFC107] h-16 w-16"
+              className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 rounded-full shadow-2xl bg-[#F0F0F0] text-[#5A7C3E] hover:bg-[#E2E2E2] h-16 w-16"
             >
               <Pencil className="w-6 h-6" />
             </Button>
@@ -419,7 +419,7 @@ export default function BoardPage() {
                   <Input
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="따뜻한 댓글을 남겨주세요..."
+                    placeholder="여기에 댓글을 남겨주세요..."
                     className="flex-1 bg-white rounded-full px-4 py-2 border-2 border-gray-200 focus:border-[#9DC183] transition-colors"
                   />
                   <Button
