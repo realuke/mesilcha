@@ -1,6 +1,6 @@
 'use client';
 
-import { doc, setDoc, collection, addDoc, getDoc, updateDoc, increment, query, where, getDocs, orderBy, limit, runTransaction } from "firebase/firestore";
+import { doc, setDoc, collection, addDoc, getDoc, updateDoc, increment, query, where, getDocs, orderBy, limit, runTransaction, deleteDoc, writeBatch } from "firebase/firestore";
 import { db } from "./firebase";
 
 export interface UserData {
@@ -147,7 +147,14 @@ export async function getPosts(): Promise<PostData[]> {
 
   const querySnapshot = await getDocs(q);
 
-  return querySnapshot.docs.map(doc => ({ ...doc.data() as PostData, id: doc.id }));
+  return querySnapshot.docs.map(doc => {
+    const data = doc.data() as PostData;
+    return {
+      ...data,
+      id: doc.id,
+      commentCount: data.commentCount || 0,
+    };
+  });
 
 }
 
@@ -163,6 +170,84 @@ export async function getComments(postId: string): Promise<CommentData[]> {
 
   const querySnapshot = await getDocs(q);
 
-  return querySnapshot.docs.map(doc => ({ ...doc.data() as CommentData, id: doc.id }));
+    return querySnapshot.docs.map(doc => ({ ...doc.data() as CommentData, id: doc.id }));
 
-}
+  }
+
+  
+
+  // Delete a post and all its comments
+
+  export async function deletePost(postId: string) {
+
+    const postRef = doc(db, "posts", postId);
+
+    const commentsRef = collection(db, `posts/${postId}/comments`);
+
+  
+
+    // Delete all comments in the subcollection
+
+    const commentsSnapshot = await getDocs(commentsRef);
+
+    const batch = writeBatch(db);
+
+    commentsSnapshot.forEach(doc => {
+
+      batch.delete(doc.ref);
+
+    });
+
+    await batch.commit();
+
+  
+
+    // Delete the post itself
+
+    await deleteDoc(postRef);
+
+  }
+
+  
+
+  // Delete a comment and decrement the post's commentCount
+
+  export async function deleteComment(postId: string, commentId: string) {
+
+    const postRef = doc(db, "posts", postId);
+
+    const commentRef = doc(db, `posts/${postId}/comments`, commentId);
+
+  
+
+    try {
+
+      await runTransaction(db, async (transaction) => {
+
+        // 1. Delete the comment
+
+        transaction.delete(commentRef);
+
+  
+
+        // 2. Decrement the comment count on the post
+
+        transaction.update(postRef, {
+
+          commentCount: increment(-1),
+
+        });
+
+      });
+
+    } catch (error) {
+
+      console.error("Transaction failed: ", error);
+
+      throw error;
+
+    }
+
+  }
+
+  

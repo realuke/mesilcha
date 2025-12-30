@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react"
 import { getUser, UserData } from "./lib/firestore"
 import { Card } from "@/components/ui/card"
 import Navbar from "@/components/navbar"
-import { Award, TrendingUp } from "lucide-react"
+import { Award, TrendingUp, Target } from "lucide-react"
 
 import { useAuth } from "./lib/auth-context"
 import { useRouter } from "next/navigation"
@@ -105,6 +105,14 @@ export default function GoalTrackerPage() {
                   <h3 className="text-xl md:text-4xl font-black text-[#5A7C3E]">나의 목표 달성</h3>
                 </div>
                 <p className="text-xs md:text-base text-gray-600 font-medium">매일 하나씩 익어가는 나의 성장</p>
+              </div>
+
+              <div className="bg-green-50/50 border-2 border-green-200/50 rounded-xl p-4 md:p-6 text-center mb-5 md:mb-8">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Target className="w-5 h-5 text-green-700" />
+                  <h4 className="text-sm font-bold text-gray-600">나의 다짐</h4>
+                </div>
+                <p className="text-lg md:text-2xl font-bold text-green-800">&quot;{userData.habit}&quot;</p>
               </div>
 
               <div className="grid grid-cols-1 gap-2 md:gap-4 mb-5 md:mb-8">

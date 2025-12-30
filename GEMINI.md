@@ -80,3 +80,9 @@ Stores comments on a specific post.
     *   Create a dedicated page to view all posts.
 3.  **Statistics Page:** Create a leaderboard page to display statistics on goal completion counts for all members.
 4.  **Project Intro Page:** Create a static page to introduce the project, potentially rendering content from a Markdown file.
+
+## User Preferences
+
+*   Please communicate in Korean.
+*   Do not run `npm run dev`. The user will handle this.
+*   Do not perform `git add` or `git commit` automatically. The user will manage git operations.
