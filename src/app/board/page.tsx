@@ -88,7 +88,9 @@ export default function BoardPage() {
       content: newComment,
     });
     setNewComment("");
-    // Refetch comments for the post
+    await fetchPosts(); // Refetch posts to get the updated comment count
+    
+    // Optionally, keep the post expanded and show the new comment immediately
     const comments = await getComments(postId);
     const commentsWithAuthors = await Promise.all(
       comments.map(async (comment: CommentData) => {
@@ -97,9 +99,12 @@ export default function BoardPage() {
       })
     );
     const postIndex = posts.findIndex(p => p.id === postId);
-    const newPosts = [...posts];
-    newPosts[postIndex].comments = commentsWithAuthors;
-    setPosts(newPosts);
+    if (postIndex !== -1) {
+      const newPosts = [...posts];
+      newPosts[postIndex].comments = commentsWithAuthors;
+      newPosts[postIndex].commentCount = commentsWithAuthors.length; // Update local count too
+      setPosts(newPosts);
+    }
   };
 
   useEffect(() => {
@@ -264,7 +269,7 @@ export default function BoardPage() {
                   <div className="flex items-center gap-1.5 md:gap-2 text-gray-500 pt-3 md:pt-4 border-t border-gray-100">
                     <button onClick={() => toggleComments(post.id)} className="flex items-center gap-1.5 md:gap-2 text-gray-500">
                       <MessageCircle className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                      <span className="text-xs md:text-sm font-medium">{post.comments?.length || 0}</span>
+                      <span className="text-xs md:text-sm font-medium">{post.commentCount || 0}</span>
                     </button>
                   </div>
                 </div>

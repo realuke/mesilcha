@@ -21,6 +21,7 @@ export interface PostData {
   imageUrl?: string;
   createdAt: string; // ISO string
   approved: boolean;
+  commentCount: number; // Added to store comment count
   authorName?: string; // Will be added client-side
   comments?: CommentData[]; // Will be added client-side
 }
@@ -74,7 +75,8 @@ export async function addPost(post: {
     content: post.content,
     imageUrl: post.imageUrl || null,
     createdAt: new Date().toISOString(),
-    approved: false, // Add approved field
+    approved: false,
+    commentCount: 0, // Initialize comment count
   });
 }
 
@@ -83,12 +85,28 @@ export async function addComment(postId: string, comment: {
   authorId: string;
   content: string;
 }) {
+  const postRef = doc(db, "posts", postId);
   const commentsRef = collection(db, `posts/${postId}/comments`);
-  await addDoc(commentsRef, {
-    authorId: comment.authorId,
-    content: comment.content,
-    createdAt: new Date().toISOString(),
-  });
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      // 1. Add the new comment
+      const newCommentRef = doc(commentsRef);
+      transaction.set(newCommentRef, {
+        authorId: comment.authorId,
+        content: comment.content,
+        createdAt: new Date().toISOString(),
+      });
+
+      // 2. Update the comment count on the post
+      transaction.update(postRef, {
+        commentCount: increment(1),
+      });
+    });
+  } catch (error) {
+    console.error("Transaction failed: ", error);
+    throw error;
+  }
 }
 
 // Approve a post and update user's progress
