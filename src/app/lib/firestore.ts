@@ -3,11 +3,41 @@
 import { doc, setDoc, collection, addDoc, getDoc, updateDoc, increment, query, where, getDocs, orderBy, limit, runTransaction } from "firebase/firestore";
 import { db } from "./firebase";
 
+export interface UserData {
+  uid: string;
+  name: string;
+  email: string;
+  role: "student" | "teacher";
+  habit: string;
+  joinedAt: string; // ISO string
+  completedCount: number;
+}
+
+export interface PostData {
+  id: string; // Added for when fetched from firestore
+  authorId: string;
+  title: string;
+  content: string;
+  imageUrl?: string;
+  createdAt: string; // ISO string
+  approved: boolean;
+  authorName?: string; // Will be added client-side
+  comments?: CommentData[]; // Will be added client-side
+}
+
+export interface CommentData {
+  id: string; // Added for when fetched from firestore
+  authorId: string;
+  content: string;
+  createdAt: string; // ISO string
+  authorName?: string; // Will be added client-side
+}
+
 // Get a user from the `users` collection
-export async function getUser(uid: string) {
+export async function getUser(uid: string): Promise<UserData | null> {
   const userRef = doc(db, "users", uid);
   const userSnap = await getDoc(userRef);
-  return userSnap.exists() ? userSnap.data() : null;
+  return userSnap.exists() ? (userSnap.data() as UserData) : null;
 }
 
 // Add a user to the `users` collection
@@ -91,7 +121,7 @@ export async function approvePostAndUpdateProgress(postId: string, studentId: st
 
 // Get all posts from the `posts` collection
 
-export async function getPosts() {
+export async function getPosts(): Promise<PostData[]> {
 
   const postsRef = collection(db, "posts");
 
@@ -99,7 +129,7 @@ export async function getPosts() {
 
   const querySnapshot = await getDocs(q);
 
-  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return querySnapshot.docs.map(doc => ({ ...doc.data() as PostData, id: doc.id }));
 
 }
 
@@ -107,7 +137,7 @@ export async function getPosts() {
 
 // Get all comments for a post
 
-export async function getComments(postId: string) {
+export async function getComments(postId: string): Promise<CommentData[]> {
 
   const commentsRef = collection(db, `posts/${postId}/comments`);
 
@@ -115,6 +145,6 @@ export async function getComments(postId: string) {
 
   const querySnapshot = await getDocs(q);
 
-  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return querySnapshot.docs.map(doc => ({ ...doc.data() as CommentData, id: doc.id }));
 
 }
