@@ -167,7 +167,7 @@ export default function BoardPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[#9DC183] via-[#8BB76E] to-[#7FA968]">
       <Navbar />
       {isPostModalOpen && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center animate-in fade-in-50">
@@ -205,7 +205,6 @@ export default function BoardPage() {
         </div>
       )}
             <main className="max-w-7xl mx-auto px-3 md:px-4 py-6 md:py-12 relative z-10">
-        <div className="bg-gradient-to-br from-[#9DC183] via-[#8BB76E] to-[#7FA968] rounded-lg shadow-xl p-6 md:p-8">
         {loading ? (
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-white text-lg">데이터를 불러오는 중...</div>
@@ -220,8 +219,12 @@ export default function BoardPage() {
               </div>
             </div>
             <div>
-            <Button size="sm" onClick={() => setIsPostModalOpen(true)} className="bg-[#FFD700] text-[#5A7C3E] hover:bg-[#FFC107] mr-2 shadow-md">
-              <Pencil className="w-4 h-4 mr-2" />새 글 작성
+            <Button
+              size="lg"
+              onClick={() => setIsPostModalOpen(true)}
+              className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 rounded-full shadow-2xl bg-[#FFD700] text-[#5A7C3E] hover:bg-[#FFC107] h-16 w-16"
+            >
+              <Pencil className="w-6 h-6" />
             </Button>
 
             </div>
@@ -276,9 +279,19 @@ export default function BoardPage() {
                         </div>
                       ))}
                     </div>
-                    <div className="flex gap-2">
-                      <Input value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="댓글을 입력하세요..." className="flex-1" />
-                      <Button onClick={() => handleCommentSubmit(post.id)} className="bg-[#5A7C3E] hover:bg-[#7FA968]">작성</Button>
+                    <div className="flex items-center gap-2 mt-4">
+                      <Input
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="따뜻한 댓글을 남겨주세요..."
+                        className="flex-1 bg-white rounded-full px-4 py-2 border-2 border-transparent focus:border-[#9DC183] transition-colors"
+                      />
+                      <Button
+                        onClick={() => handleCommentSubmit(post.id)}
+                        className="bg-[#5A7C3E] text-white rounded-full px-5 py-2 hover:bg-[#7FA968] transition-colors shadow-md"
+                      >
+                        작성
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -316,7 +329,6 @@ export default function BoardPage() {
           </div>
         </>
         )}
-        </div>
       </main>
     </div>
   )
