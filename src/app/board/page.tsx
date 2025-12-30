@@ -88,21 +88,25 @@ export default function BoardPage() {
       content: newComment,
     });
     setNewComment("");
-    await fetchPosts(); // Refetch posts to get the updated comment count
-    
-    // Optionally, keep the post expanded and show the new comment immediately
-    const comments = await getComments(postId);
-    const commentsWithAuthors = await Promise.all(
-      comments.map(async (comment: CommentData) => {
-        const author = await getUser(comment.authorId);
-        return { ...comment, authorName: author?.name || "이름없음" };
-      })
-    );
+
+    // Update local state
     const postIndex = posts.findIndex(p => p.id === postId);
     if (postIndex !== -1) {
       const newPosts = [...posts];
+      
+      // Increment comment count locally
+      newPosts[postIndex].commentCount = (newPosts[postIndex].commentCount || 0) + 1;
+
+      // Refetch comments for the current post to show the new one
+      const comments = await getComments(postId);
+      const commentsWithAuthors = await Promise.all(
+        comments.map(async (comment: CommentData) => {
+          const author = await getUser(comment.authorId);
+          return { ...comment, authorName: author?.name || "이름없음" };
+        })
+      );
       newPosts[postIndex].comments = commentsWithAuthors;
-      newPosts[postIndex].commentCount = commentsWithAuthors.length; // Update local count too
+
       setPosts(newPosts);
     }
   };
