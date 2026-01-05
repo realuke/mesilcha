@@ -1,10 +1,13 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
-import { getUser, UserData } from "./lib/firestore"
+import { getUser, UserData, updateUserHabit } from "./lib/firestore"
 import { Card } from "@/components/ui/card"
 import Navbar from "@/components/navbar"
-import { Award, TrendingUp, Target } from "lucide-react"
+import { Award, TrendingUp, Target, Pencil, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 import { useAuth } from "./lib/auth-context"
 import { useRouter } from "next/navigation"
@@ -16,6 +19,8 @@ export default function GoalTrackerPage() {
   const [userData, setUserData] = useState<UserData | null>(null)
 
   const [loading, setLoading] = useState(true)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [newHabit, setNewHabit] = useState("")
 
   const fetchUserData = useCallback(async () => {
     if (user) {
@@ -43,9 +48,21 @@ export default function GoalTrackerPage() {
     fetchUserData();
   }, [user, authLoading, fetchUserData])
 
-
-
-
+  const handleSaveHabit = async () => {
+    if (!user || !newHabit.trim()) {
+      alert("새로운 다짐을 입력해주세요.");
+      return;
+    }
+    try {
+      await updateUserHabit(user.uid, newHabit);
+      setUserData(prevData => prevData ? { ...prevData, habit: newHabit } : null);
+      setIsEditModalOpen(false);
+      alert("다짐이 성공적으로 수정되었습니다.");
+    } catch (error) {
+      console.error("Failed to update habit:", error);
+      alert("다짐 수정에 실패했습니다.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#9DC183] via-[#8BB76E] to-[#7FA968] relative overflow-hidden">
@@ -111,6 +128,9 @@ export default function GoalTrackerPage() {
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <Target className="w-5 h-5 text-green-700" />
                   <h4 className="text-sm font-bold text-gray-600">나의 다짐</h4>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 ml-1" onClick={() => { setNewHabit(userData.habit); setIsEditModalOpen(true); }}>
+                    <Pencil className="w-4 h-4 text-gray-500" />
+                  </Button>
                 </div>
                 <p className="text-lg md:text-2xl font-bold text-green-800">&quot;{userData.habit}&quot;</p>
               </div>
@@ -173,6 +193,30 @@ export default function GoalTrackerPage() {
           </Card>
         </div>
         </>
+        )}
+        {isEditModalOpen && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center animate-in fade-in-50">
+            <Card className="w-[90vw] max-w-lg">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-bold">다짐 수정</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setIsEditModalOpen(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="habit">새로운 다짐</Label>
+                    <Input id="habit" placeholder="다짐을 입력하세요" value={newHabit} onChange={e => setNewHabit(e.target.value)} />
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>취소</Button>
+                  <Button onClick={handleSaveHabit}>저장</Button>
+                </div>
+              </div>
+            </Card>
+          </div>
         )}
       </main>
     </div>

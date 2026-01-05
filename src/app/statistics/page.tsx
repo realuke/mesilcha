@@ -69,7 +69,8 @@ export default function StatisticsPage() {
                 >
                   <span className="font-bold text-lg md:text-xl text-gray-700 mr-4 w-6 text-center">#{index + 1}</span>
                   <div className="flex-1 flex flex-col">
-                    <span className="text-xl md:text-2xl font-semibold text-[#5A7C3E] mb-2">{member.name}</span>
+                    <span className="text-xl md:text-2xl font-semibold text-[#5A7C3E] mb-1">{member.name}</span>
+                    <p className="text-sm text-gray-600 mb-3 font-medium">"{member.habit}"</p>
                     <div className="flex items-center gap-2 flex-wrap">
                       {Array.from({ length: Math.min(member.completedCount, 30) }).map((_, i) => (
                         <div
