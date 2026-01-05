@@ -1,6 +1,6 @@
 'use client';
 
-import { doc, setDoc, collection, addDoc, getDoc, updateDoc, increment, query, where, getDocs, orderBy, limit, runTransaction, deleteDoc, writeBatch, startAfter, arrayUnion, arrayRemove } from "firebase/firestore";
+import { doc, setDoc, collection, addDoc, getDoc, updateDoc, increment, query, where, getDocs, orderBy, limit, runTransaction, deleteDoc, writeBatch, startAfter } from "firebase/firestore";
 import { db } from "./firebase";
 
 export interface UserData {
@@ -11,7 +11,6 @@ export interface UserData {
   habit: string;
   joinedAt: string; // ISO string
   completedCount: number;
-  likedPosts?: string[];
 }
 
 export interface PostData {
@@ -23,7 +22,6 @@ export interface PostData {
   createdAt: string; // ISO string
   approved: boolean;
   commentCount: number; // Added to store comment count
-  likeCount?: number; // Added to store like count
   authorName?: string; // Will be added client-side
   comments?: CommentData[]; // Will be added client-side
 }
@@ -79,7 +77,6 @@ export async function addPost(post: {
     createdAt: new Date().toISOString(),
     approved: false,
     commentCount: 0, // Initialize comment count
-    likeCount: 0, // Initialize like count
   });
 }
 
@@ -352,214 +349,6 @@ export async function getComments(postId: string): Promise<CommentData[]> {
 
   
 
-            // Toggle a like on a post
-
-  
-
-    
-
-  
-
-            export async function toggleLikePost(postId: string, userId: string) {
-
-  
-
-    
-
-  
-
-              const postRef = doc(db, "posts", postId);
-
-  
-
-    
-
-  
-
-              const userRef = doc(db, "users", userId);
-
-  
-
-    
-
-  
-
-              const likeRef = doc(db, `posts/${postId}/likes`, userId);
-
-  
-
-    
-
-  
-
-          
-
-  
-
-    
-
-  
-
-              try {
-
-  
-
-    
-
-  
-
-                await runTransaction(db, async (transaction) => {
-
-  
-
-    
-
-  
-
-                  const likeDoc = await transaction.get(likeRef);
-
-  
-
-    
-
-  
-
-          
-
-  
-
-    
-
-  
-
-                  if (likeDoc.exists()) {
-
-  
-
-    
-
-  
-
-                    // User has already liked the post, so unlike it
-
-  
-
-    
-
-  
-
-                    transaction.delete(likeRef);
-
-  
-
-    
-
-  
-
-                    transaction.update(postRef, { likeCount: increment(-1) });
-
-  
-
-    
-
-  
-
-                    transaction.update(userRef, { likedPosts: arrayRemove(postId) });
-
-  
-
-    
-
-  
-
-                  } else {
-
-  
-
-    
-
-  
-
-                    // User has not liked the post, so like it
-
-  
-
-    
-
-  
-
-                    transaction.set(likeRef, { userId, createdAt: new Date().toISOString() });
-
-  
-
-    
-
-  
-
-                    transaction.update(postRef, { likeCount: increment(1) });
-
-  
-
-    
-
-  
-
-                    transaction.update(userRef, { likedPosts: arrayUnion(postId) });
-
-  
-
-    
-
-  
-
-                  }
-
-  
-
-    
-
-  
-
-                });
-
-  
-
-    
-
-  
-
-              } catch (error) {
-
-  
-
-    
-
-  
-
-                console.error("Like transaction failed: ", error);
-
-  
-
-    
-
-  
-
-                throw error;
-
-  
-
-    
-
-  
-
-              }
-
-  
-
-    
-
-  
-
-            }
+            
 
   

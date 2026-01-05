@@ -3,11 +3,11 @@
 import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "../lib/auth-context"
 import { useRouter } from "next/navigation"
-import { getUser, approvePostAndUpdateProgress, addPost, getPosts, getComments, addComment, deletePost, deleteComment, toggleLikePost, UserData, PostData, CommentData } from "../lib/firestore"
+import { getUser, approvePostAndUpdateProgress, addPost, getPosts, getComments, addComment, deletePost, deleteComment, UserData, PostData, CommentData } from "../lib/firestore"
 import { uploadImage } from "../lib/storage"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { X, CheckCircle, Pencil, Trash2, Heart } from "lucide-react"
+import { X, CheckCircle, Pencil, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Navbar from "@/components/navbar"
@@ -254,61 +254,7 @@ export default function BoardPage() {
       }
     };
   
-        const handleLikePost = async (e: React.MouseEvent, postId: string) => {
-          e.stopPropagation();
-          if (!user || !userData) {
-            alert("로그인이 필요합니다.");
-            return;
-          }
-      
-          const postIndex = posts.findIndex(p => p.id === postId);
-          if (postIndex === -1) return;
-      
-          // Save original states for potential revert
-          const originalPosts = posts;
-          const originalUserData = userData;
-          const originalSelectedPost = selectedPost;
-      
-          const post = posts[postIndex];
-          const isLiked = originalUserData.likedPosts?.includes(postId);
-      
-          // --- Optimistic UI Update ---
-          // 1. Update main posts array
-          const newPosts = [...originalPosts];
-          newPosts[postIndex] = {
-            ...post,
-            likeCount: isLiked ? (post.likeCount || 1) - 1 : (post.likeCount || 0) + 1,
-          };
-          setPosts(newPosts);
-      
-          // 2. Update user data
-          const newUserLikedPosts = isLiked
-            ? originalUserData.likedPosts?.filter(id => id !== postId)
-            : [...(originalUserData.likedPosts || []), postId];
-          setUserData({ ...originalUserData, likedPosts: newUserLikedPosts });
-      
-          // 3. Update selected post if it's the one being liked
-          if (originalSelectedPost && originalSelectedPost.id === postId) {
-            setSelectedPost(prev => prev ? ({
-              ...prev,
-              likeCount: isLiked ? (prev.likeCount || 1) - 1 : (prev.likeCount || 0) + 1
-            }) : null);
-          }
-      
-          // --- API Call ---
-          try {
-            await toggleLikePost(postId, user.uid);
-          } catch (error) {
-            console.error("Failed to like post:", error);
-            alert("게시물 좋아요 처리에 실패했습니다.");
-            // Revert UI on error
-            setPosts(originalPosts);
-            setUserData(originalUserData);
-            if (originalSelectedPost) {
-              setSelectedPost(originalSelectedPost);
-            }
-          }
-        };    return (
+        return (
       <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[#9DC183] via-[#8BB76E] to-[#7FA968]">
         {!isImageViewerOpen && <Navbar />}
         {isPostModalOpen && (
@@ -408,82 +354,37 @@ export default function BoardPage() {
                 
                                 </div>
                                 
-                                                                                      <div className="p-3 flex items-end min-h-[5rem]">
-                                
-                                                                                        <Button variant="ghost" size="sm" className="flex items-center gap-2 group/like active:scale-125 transition-transform" onClick={(e) => handleLikePost(e, post.id)}>
-                                
-                                                                                          <Heart className={`w-5 h-5 group-hover/like:fill-red-500 group-hover/like:text-red-500 transition-colors ${isLiked ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
-                                
-                                                                                          <span className="font-bold text-gray-600">{post.likeCount || 0}</span>
-                                
-                                                                                        </Button>
-                                
-                                                                    
-                                
-                                                                                        <div className="flex-grow" />
-                                
-                                                                    
-                                
-                                                                                        {/* Teacher approval actions */}
-                                
-                                                                                        <div className="z-10 flex items-center gap-2">
-                                
-                                                                                          {userData?.role === 'teacher' && !post.approved && (
-                                
-                                                                                            <Button
-                                
-                                                                                              size="sm"
-                                
-                                                                                              variant="outline"
-                                
-                                                                                              className="bg-white/80 backdrop-blur-sm border-green-600 text-green-700 hover:bg-green-50"
-                                
-                                                                                              onClick={(e) => { e.stopPropagation(); handleApprovePost(post.id, post.authorId); }}
-                                
-                                                                                            >
-                                
-                                                                                              <CheckCircle className="w-4 h-4 mr-2" />
-                                
-                                                                                              실천 완료!
-                                
-                                                                                            </Button>
-                                
-                                                                                          )}
-                                
-                                                                                          {post.approved && (
-                                
-                                                                                            <div className="relative w-14 h-14 md:w-20 md:h-20 animate-in zoom-in duration-500">
-                                
-                                                                                              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#F4D03F] via-[#F39C12] to-[#E67E22] shadow-lg rotate-12 opacity-95"></div>
-                                
-                                                                                              <div className="absolute inset-0.5 md:inset-1 rounded-full border-2 border-dashed border-white/60"></div>
-                                
-                                                                                              <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 w-3 h-3 md:w-4 md:h-4 bg-white/40 rounded-full blur-sm"></div>
-                                
-                                                                                              <div className="absolute inset-0 flex flex-col items-center justify-center rotate-12">
-                                
-                                                                                                <span className="text-[9px] md:text-xs font-black text-white drop-shadow-md leading-tight text-center">
-                                
-                                                                                                  실천<br />
-                                
-                                                                                                  완료!
-                                
-                                                                                                </span>
-                                
-                                                                                              </div>
-                                
-                                                                                              <div className="absolute -top-0.5 -right-0.5 md:-top-1 md:-right-1 w-2.5 h-2.5 md:w-3 md:h-3 bg-[#5A7C3E] rounded-full shadow-md"></div>
-                                
-                                                                                            </div>
-                                
-                                                                                          )}
-                                
-                                                                                        </div>
-                                
-                                                                                      </div>
-                              </Card>
-                            )
-                          })}            </div>          {hasMorePosts && (
+                                                                {/* Teacher approval actions */}
+                              <div className="absolute bottom-4 right-4 z-10 flex items-center gap-2">
+                                {userData?.role === 'teacher' && !post.approved && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="bg-white/80 backdrop-blur-sm border-green-600 text-green-700 hover:bg-green-50"
+                                    onClick={(e) => { e.stopPropagation(); handleApprovePost(post.id, post.authorId); }}
+                                  >
+                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                    실천 완료!
+                                  </Button>
+                                )}
+                                {post.approved && (
+                                  <div className="relative w-14 h-14 md:w-20 md:h-20 animate-in zoom-in duration-500">
+                                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#F4D03F] via-[#F39C12] to-[#E67E22] shadow-lg rotate-12 opacity-95"></div>
+                                    <div className="absolute inset-0.5 md:inset-1 rounded-full border-2 border-dashed border-white/60"></div>
+                                    <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 w-3 h-3 md:w-4 md:h-4 bg-white/40 rounded-full blur-sm"></div>
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center rotate-12">
+                                      <span className="text-[9px] md:text-xs font-black text-white drop-shadow-md leading-tight text-center">
+                                        실천<br />
+                                        완료!
+                                      </span>
+                                    </div>
+                                    <div className="absolute -top-0.5 -right-0.5 md:-top-1 md:-right-1 w-2.5 h-2.5 md:w-3 md:h-3 bg-[#5A7C3E] rounded-full shadow-md"></div>
+                                  </div>
+                                )}
+                              </div>
+                            </Card>
+                          )
+                        })}            </div>          {hasMorePosts && (
             <div className="mt-8 text-center">
               <Button
                 onClick={handleFetchMore}
@@ -555,13 +456,7 @@ export default function BoardPage() {
 
               {/* Comments Section (now inside scrollable area) */}
               <div className="mt-8 pt-6 border-t">
-                <div className="flex justify-between items-center mb-4">
-                  <h4 className="font-bold text-gray-800">댓글 ({selectedPost.commentCount || 0})</h4>
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2 group/like active:scale-125 transition-transform" onClick={(e) => handleLikePost(e, selectedPost.id)}>
-                    <Heart className={`w-5 h-5 group-hover/like:fill-red-500 group-hover/like:text-red-500 transition-colors ${userData?.likedPosts?.includes(selectedPost.id) ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
-                    <span className="font-bold text-gray-600">{selectedPost.likeCount || 0}</span>
-                  </Button>
-                </div>
+                <h4 className="font-bold text-gray-800 mb-4">댓글 ({selectedPost.commentCount || 0})</h4>
                 <div className="space-y-4 mb-6">
                   {selectedPost.comments?.map((comment: CommentData) => (
                     <div key={comment.id} className="bg-gray-50 p-3 rounded-lg shadow-sm border flex justify-between items-start">
