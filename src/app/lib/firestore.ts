@@ -1,6 +1,6 @@
 'use client';
 
-import { doc, setDoc, collection, addDoc, getDoc, updateDoc, increment, query, where, getDocs, orderBy, limit, runTransaction, deleteDoc, writeBatch } from "firebase/firestore";
+import { doc, setDoc, collection, addDoc, getDoc, updateDoc, increment, query, where, getDocs, orderBy, limit, runTransaction, deleteDoc, writeBatch, startAfter, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "./firebase";
 
 export interface UserData {
@@ -11,6 +11,7 @@ export interface UserData {
   habit: string;
   joinedAt: string; // ISO string
   completedCount: number;
+  likedPosts?: string[];
 }
 
 export interface PostData {
@@ -22,6 +23,7 @@ export interface PostData {
   createdAt: string; // ISO string
   approved: boolean;
   commentCount: number; // Added to store comment count
+  likeCount?: number; // Added to store like count
   authorName?: string; // Will be added client-side
   comments?: CommentData[]; // Will be added client-side
 }
@@ -77,6 +79,7 @@ export async function addPost(post: {
     createdAt: new Date().toISOString(),
     approved: false,
     commentCount: 0, // Initialize comment count
+    likeCount: 0, // Initialize like count
   });
 }
 
@@ -139,23 +142,30 @@ export async function approvePostAndUpdateProgress(postId: string, studentId: st
 
 // Get all posts from the `posts` collection
 
-export async function getPosts(): Promise<PostData[]> {
-
+export async function getPosts(startAfterDoc?: any): Promise<{ posts: PostData[], lastVisible: any }> {
   const postsRef = collection(db, "posts");
+  const postsLimit = 9;
 
-  const q = query(postsRef, orderBy("createdAt", "desc"));
+  let q;
+  if (startAfterDoc) {
+    q = query(postsRef, orderBy("createdAt", "desc"), startAfter(startAfterDoc), limit(postsLimit));
+  } else {
+    q = query(postsRef, orderBy("createdAt", "desc"), limit(postsLimit));
+  }
 
   const querySnapshot = await getDocs(q);
 
-  return querySnapshot.docs.map(doc => {
+  const posts = querySnapshot.docs.map(doc => {
     const data = doc.data() as PostData;
     return {
       ...data,
-      id: doc.id,
+id: doc.id,
       commentCount: data.commentCount || 0,
     };
   });
 
+  const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+  return { posts, lastVisible };
 }
 
 
@@ -226,44 +236,330 @@ export async function getComments(postId: string): Promise<CommentData[]> {
 
   
 
-  // Delete a comment and decrement the post's commentCount
-
-  export async function deleteComment(postId: string, commentId: string) {
-
-    const postRef = doc(db, "posts", postId);
-
-    const commentRef = doc(db, `posts/${postId}/comments`, commentId);
+    // Delete a comment and decrement the post's commentCount
 
   
 
-    try {
-
-      await runTransaction(db, async (transaction) => {
-
-        // 1. Delete the comment
-
-        transaction.delete(commentRef);
+    export async function deleteComment(postId: string, commentId: string) {
 
   
 
-        // 2. Decrement the comment count on the post
+      const postRef = doc(db, "posts", postId);
 
-        transaction.update(postRef, {
+  
 
-          commentCount: increment(-1),
+      const commentRef = doc(db, `posts/${postId}/comments`, commentId);
+
+  
+
+  
+
+  
+
+      try {
+
+  
+
+        await runTransaction(db, async (transaction) => {
+
+  
+
+          // 1. Delete the comment
+
+  
+
+          transaction.delete(commentRef);
+
+  
+
+  
+
+  
+
+          // 2. Decrement the comment count on the post
+
+  
+
+          transaction.update(postRef, {
+
+  
+
+            commentCount: increment(-1),
+
+  
+
+          });
+
+  
 
         });
 
-      });
+  
 
-    } catch (error) {
+      } catch (error) {
 
-      console.error("Transaction failed: ", error);
+  
 
-      throw error;
+        console.error("Transaction failed: ", error);
+
+  
+
+        throw error;
+
+  
+
+      }
+
+  
 
     }
 
-  }
+  
+
+  
+
+  
+
+    // Update a user's habit
+
+  
+
+      export async function updateUserHabit(uid: string, newHabit: string) {
+
+  
+
+        const userRef = doc(db, "users", uid);
+
+  
+
+        await updateDoc(userRef, {
+
+  
+
+          habit: newHabit,
+
+  
+
+        });
+
+  
+
+      }
+
+  
+
+    
+
+  
+
+            // Toggle a like on a post
+
+  
+
+    
+
+  
+
+            export async function toggleLikePost(postId: string, userId: string) {
+
+  
+
+    
+
+  
+
+              const postRef = doc(db, "posts", postId);
+
+  
+
+    
+
+  
+
+              const userRef = doc(db, "users", userId);
+
+  
+
+    
+
+  
+
+              const likeRef = doc(db, `posts/${postId}/likes`, userId);
+
+  
+
+    
+
+  
+
+          
+
+  
+
+    
+
+  
+
+              try {
+
+  
+
+    
+
+  
+
+                await runTransaction(db, async (transaction) => {
+
+  
+
+    
+
+  
+
+                  const likeDoc = await transaction.get(likeRef);
+
+  
+
+    
+
+  
+
+          
+
+  
+
+    
+
+  
+
+                  if (likeDoc.exists()) {
+
+  
+
+    
+
+  
+
+                    // User has already liked the post, so unlike it
+
+  
+
+    
+
+  
+
+                    transaction.delete(likeRef);
+
+  
+
+    
+
+  
+
+                    transaction.update(postRef, { likeCount: increment(-1) });
+
+  
+
+    
+
+  
+
+                    transaction.update(userRef, { likedPosts: arrayRemove(postId) });
+
+  
+
+    
+
+  
+
+                  } else {
+
+  
+
+    
+
+  
+
+                    // User has not liked the post, so like it
+
+  
+
+    
+
+  
+
+                    transaction.set(likeRef, { userId, createdAt: new Date().toISOString() });
+
+  
+
+    
+
+  
+
+                    transaction.update(postRef, { likeCount: increment(1) });
+
+  
+
+    
+
+  
+
+                    transaction.update(userRef, { likedPosts: arrayUnion(postId) });
+
+  
+
+    
+
+  
+
+                  }
+
+  
+
+    
+
+  
+
+                });
+
+  
+
+    
+
+  
+
+              } catch (error) {
+
+  
+
+    
+
+  
+
+                console.error("Like transaction failed: ", error);
+
+  
+
+    
+
+  
+
+                throw error;
+
+  
+
+    
+
+  
+
+              }
+
+  
+
+    
+
+  
+
+            }
 
   
