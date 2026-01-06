@@ -320,7 +320,6 @@ export default function BoardPage() {
   
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
                           {posts.map((post: PostData) => {
-                            const isLiked = userData?.likedPosts?.includes(post.id);
                             return (
                               <Card
                                 key={post.id}
